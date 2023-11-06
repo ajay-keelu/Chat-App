@@ -8,7 +8,7 @@ const userRegistration = asyncHandler(async (req, res) => {
     throw new Error("Please enter all fields");
   }
   let exist = await User.find({ email });
-  // console.log("exist -- ", typeof exist);
+  
   if (exist.length >= 1) {
     res.status(400);
     throw new Error("user already exists");
@@ -59,7 +59,7 @@ const allUsers = asyncHandler(async (req, res) => {
 
   const users = await User.find(keyword).find({ _id: { $ne: req.user._id } });
   res.send(users);
-  console.log(keyword);
+  // console.log(keyword);
 });
 
 module.exports = { userRegistration, authUser, allUsers };

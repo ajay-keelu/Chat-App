@@ -1,9 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
 import { Container, Box, Text } from "@chakra-ui/react";
 import Login from "../Components/Authentication/Login";
 import Signup from "../Components/Authentication/Signup";
+import { useNavigate } from "react-router-dom";
 const HomePage = () => {
+  const navigate = useNavigate()
+  useEffect(() => {
+    const user = localStorage.getItem('userInfo')
+    if (user) navigate('/chat')
+  }, [navigate])
   return (
     <Container maxW={Container.xl} centerContent bg={""}>
       <Box
@@ -17,7 +23,7 @@ const HomePage = () => {
         borderWidth={"1px"}
       >
         <Text fontSize={"3xl"} color={"blackAlpha.600"}>
-          Harish Maddalaaaaaaaaaaaa
+          Chat Rambola
         </Text>
       </Box>
       <Box
