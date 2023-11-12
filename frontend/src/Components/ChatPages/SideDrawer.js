@@ -14,7 +14,7 @@ const SideDrawer = () => {
     const [search, setSearch] = useState()
     const [searchResult, setSearchResult] = useState()
     const [loading, setLoading] = useState()
-    const [loadingChat, setLoadingChat] = useState()
+    const [loadingChat, setLoadingChat] = useState([])
     const { isOpen, onOpen, onClose } = useDisclosure()
     const { user, setSelectedChat } = ChatState()
     const Logout = () => {
@@ -42,7 +42,6 @@ const SideDrawer = () => {
         }
         axios.get(`http://localhost:1111/api/user/?search=${search}`, config).then((res) => {
             setSearchResult(res.data)
-            console.log(res.data)
             setLoading(false)
         }).catch((err) => {
             toast({
@@ -56,21 +55,26 @@ const SideDrawer = () => {
             setLoading(false)
         })
     }
-    const actionChat = (userId) => {
-        console.log(userId)
+    const accessChat = (userId) => {
         const config = {
-            "Content-type": "application/json",
-            Authorization: `Bearer ${user.token}`
+            headers: {
+                "Content-type": "application/json",
+                Authorization: `Bearer ${user.token}`
+            }
         }
         setLoadingChat(true)
         axios.post('http://localhost:1111/api/chat', { userId }, config).then((res) => {
             setSelectedChat(res.data)
             setLoadingChat(false)
             onClose()
-        }).catch((err)=>{
+        }).catch((err) => {
             toast({
-              title:'Error! Fetching Chat',
-                
+                title: 'Error! Fetching Chat',
+                description: err.message,
+                status: "error",
+                duration: 2000,
+                isClosable: true,
+                position: "top"
             })
         })
     }
@@ -134,7 +138,7 @@ const SideDrawer = () => {
                                 return <UserListItem
                                     key={user._id}
                                     user={user}
-                                    handleFunction={() => actionChat(user._id)}
+                                    handleFunction={() => accessChat(user._id)}
                                 />
                             })
                         )}
