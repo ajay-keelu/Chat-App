@@ -16,7 +16,7 @@ const userRegistration = asyncHandler(async (req, res) => {
   const user = await User.create({ name, email, password, picture });
   if (user) {
     res.status(200).json({
-      id: user._id,
+      _id: user._id,
       name: user.name,
       email: user.email,
       password: user.password,
@@ -34,7 +34,7 @@ const authUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
   if (user && (await user.matchPassword(password))) {
     res.status(201).json({
-      id: user._id,
+      _id: user._id,
       name: user.name,
       email: user.email,
       password: user.password,

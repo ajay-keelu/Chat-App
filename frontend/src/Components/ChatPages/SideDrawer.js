@@ -1,5 +1,5 @@
 import { BellIcon, ChevronDownIcon } from '@chakra-ui/icons'
-import { Avatar, Box, Button, Drawer, DrawerBody, DrawerContent, DrawerHeader, DrawerOverlay, Input, Menu, MenuButton, MenuItem, MenuList, Text, Tooltip, useDisclosure, useToast } from '@chakra-ui/react'
+import { Avatar, Box, Button, Drawer, DrawerBody, DrawerContent, DrawerHeader, DrawerOverlay, Input, Menu, MenuButton, MenuItem, MenuList, Spinner, Text, Tooltip, useDisclosure, useToast } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import { FaSearch } from 'react-icons/fa'
 import { ChatState } from '../../Context/ChatProvider'
@@ -8,15 +8,16 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import ChatLoading from '../ChatLoading'
 import UserListItem from '../userAvatar/UserListItem'
+import { getSender } from '../../config/chatLogics'
 const SideDrawer = () => {
     // const { user } = ChatState()
     const navigate = useNavigate()
     const [search, setSearch] = useState()
     const [searchResult, setSearchResult] = useState()
     const [loading, setLoading] = useState()
-    const [loadingChat, setLoadingChat] = useState([])
+    const [loadingChat, setLoadingChat] = useState()
     const { isOpen, onOpen, onClose } = useDisclosure()
-    const { user, setSelectedChat } = ChatState()
+    const { user, setSelectedChat, chats, setChats, notification, setNotification } = ChatState()
     const Logout = () => {
         localStorage.removeItem('userInfo')
         navigate('/')
@@ -64,6 +65,8 @@ const SideDrawer = () => {
         }
         setLoadingChat(true)
         axios.post('http://localhost:1111/api/chat', { userId }, config).then((res) => {
+            if (!chats.find((ct) => ct._id === res.data._id))
+                setChats([res.data, ...chats])
             setSelectedChat(res.data)
             setLoadingChat(false)
             onClose()
@@ -99,10 +102,36 @@ const SideDrawer = () => {
                 </Text>
                 <div>
                     <Menu>
-                        <MenuButton p={1}>
+                        <MenuButton p={1} position={'relative'}>
                             <BellIcon fontSize={'2xl'} m={1} />
+                            {
+                                notification.length == 0 ? <></> :
+                                    <span style={{ position: 'absolute', zIndex: '1111', top: '0%', borderRadius: '10px', fontSize: '11px', padding: '0 5px', minHeight: '15px', minWidth: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', left: '20px', background: '#24ebf2', color: 'white', }}>{notification.length}</span>
+                            }
                         </MenuButton>
-                        {/* <MenuList></MenuList> */}
+                        <MenuList p={2} overflowY={'scroll'} maxHeight={'30vh'}>
+                            {notification.length == 0 ?
+                                <>no new messages</> :
+                                <>
+                                    {
+                                        notification.map((notify) => {
+                                            return <MenuItem key={notify._id}
+                                                onClick={() => {
+                                                    setSelectedChat(notify.chat);
+                                                    setNotification(notification.filter((n) => n !== notify))
+                                                }}
+                                            >
+                                                {
+                                                    notify.chat.isGroupChat ?
+                                                        `New message in ${notify.chat.chatName}` :
+                                                        `New Message from ${getSender(user, notify.chat.users)}`
+                                                }
+                                            </MenuItem>
+                                        })
+                                    }
+                                </>
+                            }
+                        </MenuList>
                     </Menu>
                     <Menu>
                         <MenuButton as={Button} rightIcon={<ChevronDownIcon />} >
@@ -142,6 +171,7 @@ const SideDrawer = () => {
                                 />
                             })
                         )}
+                        {loadingChat && <Spinner display={'flex'} ml={'auto'} />}
                     </DrawerBody>
                 </DrawerContent>
             </Drawer>

@@ -8,16 +8,18 @@ const app = express();
 const { notFound, errorHandler } = require("./middlewareError/errorMiddleware");
 const userRoutes = require("./routes/userRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const messageRoutes = require("./routes/messageRoutes");
 app.use(cors());
 
 app.use(express.json());
 
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
-
+var server
 {
   /* ====== Mongo Connection ========*/
   const url =
@@ -43,7 +45,42 @@ app.use(errorHandler);
 app.use("/", (req, res) => {
   res.send("Welcome Home");
 });
-
-app.listen(1111, () => {
+server = app.listen(1111, () => {
   console.log("http://localhost:1111");
 });
+const io = require('socket.io')(server, {
+  pingTimeout: 60000,
+  cors: {
+    origin: 'http://localhost:3000'
+  }
+})
+
+io.on("connection", (socket) => {
+  console.log('connected to socket.io')
+  socket.on('setup', (userData) => {
+    socket.join(userData._id)
+    socket.emit('connected')
+  })
+  socket.on('join chat', (room) => {
+    socket.join(room)
+    console.log('user join room : ', room)
+  })
+  socket.on('typing', (room) => {
+    socket.in(room).emit('typing')
+  })
+  socket.on('stop typing', (room) => {
+    socket.in(room).emit('stop typing')
+  })
+  socket.on('new message', (newMessageReceived) => {
+    var chat = newMessageReceived.chat
+    if (!chat.users) return console.log('chat.users not defined');
+    chat.users.forEach((ele) => {
+      if (ele._id == newMessageReceived.sender._id) return;
+      socket.in(ele._id).emit("message received", newMessageReceived);
+    })
+  })
+  socket.off('setup', () => {
+    console.log('User Disconnected')
+    socket.leave(userData._id)
+  })
+})

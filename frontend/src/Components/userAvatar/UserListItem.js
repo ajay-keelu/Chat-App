@@ -14,6 +14,10 @@ const UserListItem = ({ user, handleFunction }) => {
       py='2'
       mb='2'
       borderRadius={'lg'}
+      _hover={{
+        background: '#38B2AC',
+        color: 'white'
+      }}
     >
       <Avatar
         mr='2'
